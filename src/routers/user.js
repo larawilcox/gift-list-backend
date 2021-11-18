@@ -120,9 +120,10 @@ router.get('/users/me/shoppingList', auth, async (req, res) => {
             })
         ).flat()
         const subscribedLists = await List.find({ _id: {$in: lists}})
+        console.log("shopping list", subscribedLists)
         //get to the actions on each listItem and build array of items that we have marked taken
         const shoppingList = subscribedLists.map((list) => {
-                const myItems = list.listItems.filter((item) => item.actions.personId.toString() === req.user._id.toString())
+                const myItems = list.listItems.filter((item) => item.actions && item.actions.personId && item.actions.personId.toString() === req.user._id.toString())
                 return {
                     listId: list._id,
                     listName: list.listName,
@@ -153,6 +154,7 @@ router.get('/users/me/shoppingList', auth, async (req, res) => {
         console.log('Shopping List', shoppingListData)
         res.send(shoppingListData)
     } catch (e) {
+        console.log(e)
         res.status(500).send(e)
     }
 })
