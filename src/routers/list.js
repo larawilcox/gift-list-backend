@@ -73,7 +73,7 @@ router.patch('/lists/:id', auth, async (req, res) => {
     }
 
     try {
-        const list = await List.findOne({ _id: req.params.id, owner: req.user._id})
+        const list = await List.findOne({ _id: req.params.id, owner: req.user._id })
 
         if (!list) {
             return res.status(404).send()
@@ -98,10 +98,10 @@ router.patch('/lists/:listId/listItem/:itemId', auth, async (req, res) => {
     }
 
     try {
-        const list = await List.findOne({ _id: req.params.listId, owner: req.user._id})
+        const list = await List.findOne({ _id: req.params.listId, owner: req.user._id })
 
         if (!list) {
-            return res.status(404).send()
+            return res.status(404).send('list not found')
         }
 
         const listItem = list.listItems.find((item) => {
@@ -113,6 +113,52 @@ router.patch('/lists/:listId/listItem/:itemId', auth, async (req, res) => {
         }
 
         updates.forEach((update) => listItem[update] = req.body[update])
+        await list.save()
+
+        res.send(list)
+    } catch (e) {
+        res.status(400).send(e)
+        console.log(e)
+    }
+})
+
+router.patch('/lists/:listId/listItem/:itemId/actions', auth, async (req, res) => {
+    console.log(req.body)
+    const updates = Object.keys(req.body)
+    const allowedUpdates = ['personId', 'action']
+    const isValidOperation = updates.every((update) => allowedUpdates.includes(update))
+
+    if (!isValidOperation) {
+        return res.status(400).send({ error: "Invalid updates!"})
+    }
+
+    try {
+        const lists = req.user.subscribedLists.map((list) => list.lists.map((listId) => {
+            return listId
+          })
+      ).flat()
+
+        const isValidList = lists.includes(req.params.listId)
+    
+        if (!isValidList) {
+            return res.status(400).send({ error: "Invalid list!"})
+        }
+
+        const list = await List.findOne({ _id: req.params.listId })
+
+        if (!list) {
+            return res.status(404).send('list not found')
+        }
+
+        const listItem = list.listItems.find((item) => {
+            return item._id.toString() === req.params.itemId
+        })
+
+        if (!listItem) {
+            return res.status(404).send()
+        }
+
+        updates.forEach((update) => listItem.actions[update] = req.body[update])
         await list.save()
 
         res.send(list)

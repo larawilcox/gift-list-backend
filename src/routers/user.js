@@ -113,4 +113,48 @@ router.get('/users/me/subscribedLists', auth, async (req, res) => {
     }
 })
 
+router.get('/users/me/shoppingList', auth, async (req, res) => {
+    try {
+        const lists = req.user.subscribedLists.map((list) => list.lists.map((listId) => {
+              return mongoose.Types.ObjectId(listId)
+            })
+        ).flat()
+        const subscribedLists = await List.find({ _id: {$in: lists}})
+        //get to the actions on each listItem and build array of items that we have marked taken
+        const shoppingList = subscribedLists.map((list) => {
+                const myItems = list.listItems.filter((item) => item.actions.personId.toString() === req.user._id.toString())
+                return {
+                    listId: list._id,
+                    listName: list.listName,
+                    items: myItems,
+                    owner: list.owner
+                }
+            }
+        )
+        console.log('user id', req.user._id)
+        console.log('shopping list', shoppingList)
+        
+
+        const owners = req.user.subscribedLists.map((list) => list.owner)
+        const subscribedOwners = await User.find({_id: {$in: owners}})
+        console.log(subscribedOwners)
+        //structure the data response to fit the app
+        const shoppingListData = subscribedOwners.map((owner) => {
+            const ownersItems = shoppingList.filter(item => item.owner.toString() === owner._id.toString())
+        
+            return {
+                _id: owner._id,
+                forename: owner.forename,
+                surname: owner.surname,
+                email: owner.email,
+                lists: ownersItems
+            }
+        })
+        console.log('Shopping List', shoppingListData)
+        res.send(shoppingListData)
+    } catch (e) {
+        res.status(500).send(e)
+    }
+})
+
 module.exports = router

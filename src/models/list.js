@@ -31,7 +31,15 @@ const listSchema = new mongoose.Schema({
             link: {
                 type: String
             }
-        }]
+        }], 
+        actions: {
+            personId: {
+                type: String
+            },
+            action: {
+                type: String
+            }
+        }
     }],
     owner: {
         type: mongoose.Schema.Types.ObjectId,
