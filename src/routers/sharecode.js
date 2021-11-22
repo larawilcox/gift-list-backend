@@ -27,30 +27,43 @@ router.post('/sharecodes', auth, async (req, res) => {
 
 router.patch('/users/me/subscribedLists', auth, async (req, res) => {
         console.log('req: ', req.body.shareCode)
-
+        console.log('subscribedlists: ', req.user.subscribedLists)
     try {
         const sharecode = req.body.shareCode
         const listToAdd = await Sharecode.findOne({ shareCode: sharecode })
 
-        const addedListOwner = req.user.subscribedLists.find((subscription) => subscription.owner === listToAdd.owner)
+        //is listToAdd already in the array?
+        const lists = req.user.subscribedLists.map((owner) => owner.lists.map((list) => {
+            return list
+        }
+        )).flat()
+        console.log('lists: ', lists)
 
-        if (addedListOwner) {
-            addedListOwner.lists.push(listToAdd.listId)
+        if (!lists.includes(listToAdd.listId)) {
+
+            const addedListOwner = req.user.subscribedLists.find((subscription) => subscription.owner === listToAdd.owner)
+
+            if (addedListOwner) {
+                addedListOwner.lists.push(listToAdd.listId)
+            } else {
+                req.user.subscribedLists.push({
+                    owner: listToAdd.owner,
+                    lists: [listToAdd.listId]
+                })
+            }
+
+            await req.user.save()
+            res.send(req.user)
         } else {
-            req.user.subscribedLists.push({
-                owner: listToAdd.owner,
-                lists: [listToAdd.listId]
-            })
+            res.status(409).send('You are already subscribed to this list.')
         }
 
-        await req.user.save()
-        res.send(req.user)
-
-    } catch (e) {
-        res.status(400).send(e)
-        console.log(e)
-    }
-})
+        } catch (e) {
+            res.status(400).send(e)
+            console.log(e)
+        }
+    } 
+)
 
 
 module.exports = router
