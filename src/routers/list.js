@@ -155,7 +155,7 @@ router.patch('/lists/:listId/listItem/:itemId/actions', auth, async (req, res) =
         })
 
         if (!listItem) {
-            return res.status(404).send()
+            return res.status(404).send('list item not found')
         }
 
         updates.forEach((update) => listItem.actions[update] = req.body[update])

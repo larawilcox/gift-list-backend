@@ -2,6 +2,7 @@ const express = require('express')
 const mongoose = require('mongoose')
 const User = require('../models/user')
 const List = require('../models/list')
+const Sharecode = require('../models/sharecode')
 const auth = require('../middleware/auth')
 const router = new express.Router()
 
@@ -74,9 +75,24 @@ router.patch('/users/me', auth, async (req, res) => {
 
 router.delete('/users/me', auth, async (req, res) => {
     try {
+        console.log('this is working')
+        //delete all copies of users lists from other users subscribed lists array
+        const subscribers = await User.updateMany({}, { $pull: { subscribedLists: {owner: req.user._id }}})
+        console.log(subscribers)
+
+        
+        //delete lists owned by the user
+        const lists = await List.deleteMany({ owner: req.user._id })
+        
+        //delete sharecodes created by the user
+        const sharecodes = await Sharecode.deleteMany({ owner: req.user._id })
+
+        //delete the user
         await req.user.remove()
+
         res.send(req.user)
     } catch (e) {
+        console.log(e)
         res.status(500).send()
     }
 })

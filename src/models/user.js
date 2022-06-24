@@ -3,6 +3,7 @@ const validator = require('validator')
 const bcrypt = require('bcryptjs')
 const jwt = require('jsonwebtoken')
 const List = require('./list')
+const Sharecode = require('./sharecode')
 
 const userSchema = new mongoose.Schema({
     forename: {
@@ -60,6 +61,12 @@ const userSchema = new mongoose.Schema({
 
 userSchema.virtual('lists', {
     ref: 'List',
+    localField: '_id',
+    foreignField: 'owner'
+})
+
+userSchema.virtual('sharecodes', {
+    ref: 'Sharecode',
     localField: '_id',
     foreignField: 'owner'
 })

@@ -1,23 +1,23 @@
 const mongoose = require('mongoose')
 
-const listSchema = new mongoose.Schema({
+const sharecodeSchema = new mongoose.Schema({
     listId: {
         type: String,
         required: true,
         trim: true
     },
     owner: {
-        type: String,
+        type: mongoose.Schema.Types.ObjectId,
         required: true,
-        trim: true
+        ref: 'User'
     },
     shareCode: {
-        type: String,
+        type:  String,
         required: true,
         trim: true
     }
 })
 
-const Sharecode = mongoose.model('Sharecode', listSchema)
+const Sharecode = mongoose.model('Sharecode', sharecodeSchema)
 
 module.exports = Sharecode
