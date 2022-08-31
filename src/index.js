@@ -5,6 +5,7 @@ require('./db/mongoose')
 const userRouter = require('./routers/user')
 const listRouter = require('./routers/list')
 const sharecodeRouter = require('./routers/sharecode')
+const resetpasswordRouter = require('./routers/resetpassword')
 
 const app = express()
 const port = process.env.PORT || 5000
@@ -13,6 +14,7 @@ app.use(express.json())
 app.use(userRouter)
 app.use(listRouter)
 app.use(sharecodeRouter)
+app.use(resetpasswordRouter)
 
 
 app.listen(port, () => {
