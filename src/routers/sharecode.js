@@ -26,8 +26,6 @@ router.post('/sharecodes', auth, async (req, res) => {
 
 
 router.patch('/users/me/subscribedLists', auth, async (req, res) => {
-        console.log('req: ', req.body.shareCode)
-        console.log('subscribedlists: ', req.user.subscribedLists)
     try {
         const sharecode = req.body.shareCode
         const listToAdd = await Sharecode.findOne({ shareCode: sharecode })
@@ -37,11 +35,10 @@ router.patch('/users/me/subscribedLists', auth, async (req, res) => {
             return list
         }
         )).flat()
-        console.log('lists: ', lists)
 
         if (!lists.includes(listToAdd.listId)) {
-
-            const addedListOwner = req.user.subscribedLists.find((subscription) => subscription.owner === listToAdd.owner)
+            const addedListOwner = req.user.subscribedLists.find((subscription) => subscription.owner === listToAdd.owner.toString())
+            
 
             if (addedListOwner) {
                 addedListOwner.lists.push(listToAdd.listId)

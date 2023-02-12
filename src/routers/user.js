@@ -129,6 +129,55 @@ router.get('/users/me/subscribedLists', auth, async (req, res) => {
     }
 })
 
+router.patch('/users/me/subscribedLists/fix', auth, async (req, res) => {
+    try {
+        const owners = new Set()
+        const fixedLists = []
+        req.user.subscribedLists.forEach((list) => {
+            if (owners.has(list.owner)) {
+                const ownerGroup = fixedLists.find((fixedList => fixedList.owner === list.owner))
+                ownerGroup.lists = ownerGroup.lists.concat(list.lists)
+            } else {
+                owners.add(list.owner)
+                fixedLists.push(list)
+            }
+        })
+        req.user.subscribedLists = fixedLists
+        req.user.save()
+        res.status(200).send()
+    } catch (e) {
+        res.status(500).send(e)
+        console.log(e)
+    }
+})
+
+router.patch('/users/me/subscribedLists/:ownerId/lists/:listId', auth, async (req, res) => {
+    try {
+        console.log(req.params)
+        const unsubscribeOwner = req.user.subscribedLists.find(owner => owner.owner === req.params.ownerId)
+        console.log('Owner', unsubscribeOwner)
+        if (!unsubscribeOwner) {
+            return res.status(404).send()
+        }
+
+        const subscribedLists = unsubscribeOwner.lists.filter(listId => listId !== req.params.listId)
+        console.log('remaining lists', subscribedLists)
+
+        if (subscribedLists.length > 0) {
+            unsubscribeOwner.lists = subscribedLists
+            
+        } else {
+            const subscribedOwners = req.user.subscribedLists.filter(owner => owner.owner !== req.params.ownerId)
+            req.user.subscribedLists = subscribedOwners
+        }
+        await req.user.save()
+        res.send(subscribedLists)
+    }
+    catch (e) {
+        console.log(e)
+    }
+})
+
 router.get('/users/me/shoppingList', auth, async (req, res) => {
     try {
         const lists = req.user.subscribedLists.map((list) => list.lists.map((listId) => {
